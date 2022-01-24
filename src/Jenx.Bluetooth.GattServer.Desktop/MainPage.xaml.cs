@@ -23,7 +23,7 @@ namespace Jenx.Bluetooth.GattServer.Desktop
 
 
 
-        private string path = @"C:\sebin\sebin_data";
+        private string path = @"C:\sebin\lab\ecg2\data\all_mitbih\01)400fs";
         private String ecgString;
         private byte[] ecgBytes;
         private int flag;
@@ -53,7 +53,7 @@ namespace Jenx.Bluetooth.GattServer.Desktop
         private async Task initializeFileAsync()
         {
             var folder = await StorageFolder.GetFolderFromPathAsync(path);
-            var file = await folder.GetFileAsync("103_2.csv");
+            var file = await folder.GetFileAsync("100.csv");
             ecgString = await FileIO.ReadTextAsync(file);
             ecgBytes = Encoding.UTF8.GetBytes(ecgString);
 
@@ -85,8 +85,17 @@ namespace Jenx.Bluetooth.GattServer.Desktop
             await Task.Delay(2000);
 
 
-            advertiseGattServerAsync();
-           
+            while (true)
+            {
+                var start = flag * 50;
+
+                ArraySegment<byte> ecg = new ArraySegment<byte>(ecgBytes, start, 50);
+
+                _gattServer.runNotifyCharaterstic(ecg.ToArray().AsBuffer());
+                await Task.Delay(10);
+                flag += 1;
+            }
+
         }
 
         private void StopGattServer_Click(object sender, RoutedEventArgs e)

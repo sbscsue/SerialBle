@@ -5,7 +5,8 @@
   xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest"
   xmlns:uap5="http://schemas.microsoft.com/appx/manifest/uap/windows10/5"
   xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
-  IgnorableNamespaces="uap mp">
+  xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+  IgnorableNamespaces="uap mp rescap">
 
   <Identity
     Name="edab2ad8-7268-4304-bf54-5f7996824b5f"
@@ -56,7 +57,12 @@
   </Applications>
 
   <Capabilities>
+    <rescap:Capability Name="broadFileSystemAccess" />
     <Capability Name="internetClient" />
+    <uap:Capability Name="removableStorage"/>
     <DeviceCapability Name="bluetooth"/>
+  
   </Capabilities>
+  
+  
 </Package>

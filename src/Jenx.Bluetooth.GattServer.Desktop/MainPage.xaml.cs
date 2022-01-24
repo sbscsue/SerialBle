@@ -3,6 +3,8 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices.WindowsRuntime;
+using System.Text;
 using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.Storage.Streams;
@@ -16,15 +18,15 @@ namespace Jenx.Bluetooth.GattServer.Desktop
        
         private ILogger _logger;
         private IGattServer _gattServer;
-       
-       
 
-       
 
-        private string path = "C:\\sebin\\lab\\ecg2\\data\\segment\\07_nsv_lead2_144_baselineRemove_resmaple8000\\files\\105\\ann\\V\\105_48.csv";
-        Windows.Storage.StorageFile f;
-        
-        private IBuffer buffer;
+
+
+
+        private string path = @"C:\sebin\sebin_data";
+        private String ecgString;
+        private byte[] ecgBytes;
+        private int flag;
 
         public MainPage()
         {
@@ -50,17 +52,14 @@ namespace Jenx.Bluetooth.GattServer.Desktop
 
         private async Task initializeFileAsync()
         {
-            Windows.Storage.StorageFolder storageFolder =Windows.Storage.ApplicationData.Current.LocalFolder;
-            f =await storageFolder.GetFileAsync(path);
-            if(f!= null)
-            {
-                buffer = await Windows.Storage.FileIO.ReadBufferAsync(f);
-            }
-            else
-            {
-                Console.WriteLine("dfdf");
-            }
-           
+            var folder = await StorageFolder.GetFolderFromPathAsync(path);
+            var file = await folder.GetFileAsync("103_2.csv");
+            ecgString = await FileIO.ReadTextAsync(file);
+            ecgBytes = Encoding.UTF8.GetBytes(ecgString);
+
+            flag = 0;
+
+
         }
 
         private async void _gattServer_OnChararteristicWrite(object myObject, CharacteristicEventArgs myArgs)
@@ -84,7 +83,10 @@ namespace Jenx.Bluetooth.GattServer.Desktop
            
             _gattServer.Start();
             await Task.Delay(2000);
-           _gattServer.runNotifyCharaterstic((Windows.Storage.Streams.Buffer)buffer);
+
+
+            advertiseGattServerAsync();
+           
         }
 
         private void StopGattServer_Click(object sender, RoutedEventArgs e)
@@ -94,17 +96,29 @@ namespace Jenx.Bluetooth.GattServer.Desktop
 
 
 
-        private void advertiseGattServer()
-        {
-            double[] data = new double[50];
-            DataWriter writer = new DataWriter();
-           
-            for(int i=0; i<50; i++)
+        private async Task advertiseGattServerAsync()
+        {   
+
+
+            while (true)
             {
-                //data[i] = System.Double.Parse(f.ReadLine());
+                var start = flag * 50;
+     
+               
+                
+                ArraySegment<byte> ecg = new ArraySegment<byte>(ecgBytes,start,50);
+      
+                _gattServer.runNotifyCharaterstic(ecg.ToArray().AsBuffer());
+                await Task.Delay(10);
+                flag += 1;
             }
-            
-            //_gattServer.runNotifyCharaterstic(data);
+
+          
+           
         }
+
+
     }
+
+
 }

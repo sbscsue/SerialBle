@@ -76,15 +76,16 @@ namespace Jenx.Bluetooth.GattServer.Common
             notifyCharacteristic = gattResult.Characteristic;
         }
         
-        public async void runNotifyCharaterstic(Windows.Storage.Streams.Buffer value)
+        public async void runNotifyCharaterstic(Windows.Storage.Streams.IBuffer value)
         {
             await _logger.LogMessageAsync("runnotify");
             if(getNotifyCharateristicStateAsync())
             {
                 await _logger.LogMessageAsync("ok");
                 Windows.Foundation.IAsyncOperation<System.Collections.Generic.IReadOnlyList<GattClientNotificationResult>> result;
-                result = notifyCharacteristic.NotifyValueAsync(value);
+                await _logger.LogMessageAsync(value.ToString());
 
+                result = notifyCharacteristic.NotifyValueAsync(value);
                 await _logger.LogMessageAsync(result.Status.ToString());
             }
             else

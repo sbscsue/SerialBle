@@ -12,7 +12,7 @@ namespace Jenx.Bluetooth.GattServer.Common
 
         Task<bool> AddNotifyCharacteristicAsync(Guid characteristicId,string userDescription);
         void setNotifyCharaterisitic(GattLocalCharacteristicResult gattResult);
-        void runNotifyCharaterstic(Windows.Storage.Streams.Buffer value);
+        void runNotifyCharaterstic(Windows.Storage.Streams.IBuffer value);
         bool getNotifyCharateristicStateAsync();
 
         Task<bool> AddReadCharacteristicAsync(Guid characteristicId, string characteristicValue, string userDescription = "N/A");

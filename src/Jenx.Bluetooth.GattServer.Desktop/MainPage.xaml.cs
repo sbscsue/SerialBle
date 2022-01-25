@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text;
 using System.Threading.Tasks;
@@ -16,15 +17,18 @@ namespace Jenx.Bluetooth.GattServer.Desktop
     public sealed partial class MainPage : Page
     {
        
+
         private ILogger _logger;
         private IGattServer _gattServer;
 
 
-
+        private const int sendLength = 50;
+        private const int bleSendCnt = 30 * 60 * 400 * 8;
 
 
         private string path = @"C:\sebin\lab\ecg2\data\all_mitbih\01)400fs";
         private String ecgString;
+        private float[] ecgfloat;
         private byte[] ecgBytes;
         private int flag;
 
@@ -53,13 +57,31 @@ namespace Jenx.Bluetooth.GattServer.Desktop
         private async Task initializeFileAsync()
         {
             var folder = await StorageFolder.GetFolderFromPathAsync(path);
-            var file = await folder.GetFileAsync("100.csv");
+            var file = await folder.GetFileAsync("203.csv");
             ecgString = await FileIO.ReadTextAsync(file);
-            ecgBytes = Encoding.UTF8.GetBytes(ecgString);
+
+            ecgfloat = parsingStringCsvToFloat(ecgString);
+
 
             flag = 0;
 
 
+        }
+
+        private float[] parsingStringCsvToFloat(String data)
+        {
+            String[] dirtySplitSample = data.Split("\r\n");
+            String[] splitSample = dirtySplitSample.Take(dirtySplitSample.Length - 1).ToArray();
+
+            float[] ecgFloat = new float[splitSample.Length];
+            for (int i = 0; i < splitSample.Length; i++)
+            {
+                ecgFloat[i] = Convert.ToSingle(splitSample[i]);      
+            }
+
+            return ecgFloat;
+
+            
         }
 
         private async void _gattServer_OnChararteristicWrite(object myObject, CharacteristicEventArgs myArgs)
@@ -87,15 +109,23 @@ namespace Jenx.Bluetooth.GattServer.Desktop
 
             while (true)
             {
-                var start = flag * 50;
+                var start = flag * sendLength;
 
-                ArraySegment<byte> ecg = new ArraySegment<byte>(ecgBytes, start, 50);
-
-                _gattServer.runNotifyCharaterstic(ecg.ToArray().AsBuffer());
-                await Task.Delay(10);
+                
+                _gattServer.runNotifyCharaterstic(floatToString(ecgfloat,start,sendLength).AsBuffer());
+                await Task.Delay(125);
                 flag += 1;
             }
 
+        }
+
+        private byte[] floatToString(float[] data,int start,int length) {
+            ArraySegment<float> ecgSeg = new ArraySegment<float>(data, start, length);
+            string all = string.Join(",", ecgSeg.ToArray());
+
+            byte[] StrByte = Encoding.UTF8.GetBytes(all);
+
+            return StrByte;
         }
 
         private void StopGattServer_Click(object sender, RoutedEventArgs e)
@@ -111,15 +141,26 @@ namespace Jenx.Bluetooth.GattServer.Desktop
 
             while (true)
             {
-                var start = flag * 50;
-     
-               
-                
-                ArraySegment<byte> ecg = new ArraySegment<byte>(ecgBytes,start,50);
-      
-                _gattServer.runNotifyCharaterstic(ecg.ToArray().AsBuffer());
-                await Task.Delay(10);
-                flag += 1;
+                var start = flag * sendLength;
+
+                if (flag != bleSendCnt)
+                {
+                    ArraySegment<byte> ecg = new ArraySegment<byte>(ecgBytes, start, sendLength);
+
+                    _gattServer.runNotifyCharaterstic(ecg.ToArray().AsBuffer());
+                    await Task.Delay(10);
+                    flag += 1;
+
+                }
+                else
+                {
+                    break;
+                }
+
+
+
+
+
             }
 
           

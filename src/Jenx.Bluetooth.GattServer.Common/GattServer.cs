@@ -82,11 +82,11 @@ namespace Jenx.Bluetooth.GattServer.Common
             {
                 await _logger.LogMessageAsync("ok");
                 Windows.Foundation.IAsyncOperation<System.Collections.Generic.IReadOnlyList<GattClientNotificationResult>> result;
-                await _logger.LogMessageAsync(value.ToString());
+                //await _logger.LogMessageAsync(value.ToString());
 
 
                 result = notifyCharacteristic.NotifyValueAsync(value);
-                await _logger.LogMessageAsync(result.Status.ToString());
+                //await _logger.LogMessageAsync(result.Status.ToString());
             }
             else
             {
@@ -253,6 +253,7 @@ namespace Jenx.Bluetooth.GattServer.Common
         public void Stop()
         {
             _gattServiceProvider.StopAdvertising(); // Warning: This does not change AdvertisementStatus status, fails on second click...
+            _gattServiceProvider = null;
         }
     }
 }

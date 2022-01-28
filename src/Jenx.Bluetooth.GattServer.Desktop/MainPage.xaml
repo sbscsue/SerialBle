@@ -21,6 +21,10 @@
                     Margin="3"
                     x:Name="StopServerButton"
                     Click="StopGattServer_Click" />
+            <Button Content="Advertise start"
+                    Margin="3"
+                    x:Name="AdvertiseButton"
+                    Click="AdvertiseGattServer_Click" />
         </StackPanel>
         <TextBlock Margin="3"
                    Text="Logs"

@@ -57,7 +57,7 @@ namespace Jenx.Bluetooth.GattServer.Desktop
         private async Task initializeFileAsync()
         {
             var folder = await StorageFolder.GetFolderFromPathAsync(path);
-            var file = await folder.GetFileAsync("203.csv");
+            var file = await folder.GetFileAsync("233.csv");
             ecgString = await FileIO.ReadTextAsync(file);
 
             ecgfloat = parsingStringCsvToFloat(ecgString);
@@ -104,20 +104,31 @@ namespace Jenx.Bluetooth.GattServer.Desktop
             await _gattServer.AddNotifyCharacteristicAsync(GattCharacteristicIdentifiers.FirmwareVersion,"MitBihECG");
            
             _gattServer.Start();
-            await Task.Delay(2000);
+         
 
 
+         
+        }
+
+
+        private async void AdvertiseGattServer_Click(object sender, RoutedEventArgs e)
+        {
+            flag = 0;
             while (true)
             {
                 var start = flag * sendLength;
 
-                
-                _gattServer.runNotifyCharaterstic(floatToString(ecgfloat,start,sendLength).AsBuffer());
+
+                _gattServer.runNotifyCharaterstic(floatToString(ecgfloat, start, sendLength).AsBuffer());
                 await Task.Delay(125);
                 flag += 1;
             }
 
+
+
         }
+
+
 
         private byte[] floatToString(float[] data,int start,int length) {
             ArraySegment<float> ecgSeg = new ArraySegment<float>(data, start, length);
@@ -133,41 +144,10 @@ namespace Jenx.Bluetooth.GattServer.Desktop
             _gattServer.Stop();
         }
 
+        private void AdvertiseButton_Click(object sender, RoutedEventArgs e)
+        {
 
-
-        private async Task advertiseGattServerAsync()
-        {   
-
-
-            while (true)
-            {
-                var start = flag * sendLength;
-
-                if (flag != bleSendCnt)
-                {
-                    ArraySegment<byte> ecg = new ArraySegment<byte>(ecgBytes, start, sendLength);
-
-                    _gattServer.runNotifyCharaterstic(ecg.ToArray().AsBuffer());
-                    await Task.Delay(10);
-                    flag += 1;
-
-                }
-                else
-                {
-                    break;
-                }
-
-
-
-
-
-            }
-
-          
-           
         }
-
-
     }
 
 

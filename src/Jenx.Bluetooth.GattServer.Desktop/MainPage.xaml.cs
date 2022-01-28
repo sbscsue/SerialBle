@@ -11,6 +11,8 @@ using Windows.Storage;
 using Windows.Storage.Streams;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using segmentRead;
+
 
 namespace Jenx.Bluetooth.GattServer.Desktop
 {
@@ -21,23 +23,23 @@ namespace Jenx.Bluetooth.GattServer.Desktop
         private ILogger _logger;
         private IGattServer _gattServer;
 
+        private segment n;
+        private segment s;
+        private segment v;
 
-        private const int sendLength = 50;
-        private const int bleSendCnt = 30 * 60 * 400 * 8;
 
 
-        private string path = @"C:\sebin\lab\ecg2\data\all_mitbih\01)400fs";
-        private String ecgString;
-        private float[] ecgfloat;
-        private byte[] ecgBytes;
-        private int flag;
+        private string folderPath = @"C:\06_nsv_lead2_160_baselineRemove\annotation\N";
+        private string folderPath2 = @"C:\06_nsv_lead2_160_baselineRemove\annotation\S";
+        private string folderPath3 = @"C:\06_nsv_lead2_160_baselineRemove\annotation\V";
+        private string check = @"C:\sebin";
 
         public MainPage()
         {
             InitializeComponent();
             InitializeLogger();
             InitializeGattServer();
-            initializeFileAsync();
+            initializePath();
 
 
         }
@@ -54,34 +56,22 @@ namespace Jenx.Bluetooth.GattServer.Desktop
             _gattServer.OnChararteristicWrite += _gattServer_OnChararteristicWrite; ;
         }
 
-        private async Task initializeFileAsync()
+        private async void initializePath()
         {
-            var folder = await StorageFolder.GetFolderFromPathAsync(path);
-            var file = await folder.GetFileAsync("233.csv");
-            ecgString = await FileIO.ReadTextAsync(file);
-
-            ecgfloat = parsingStringCsvToFloat(ecgString);
-
-
-            flag = 0;
-
+            //관련 객체 생성 n/s/v
+            
+            n = new segment(check);
+            s = new segment(folderPath2);
+            v = new segment(folderPath3);
+            await n.getFileQueueAsync();
+            await s.getFileQueueAsync();
+            await v.getFileQueueAsync();
 
         }
 
-        private float[] parsingStringCsvToFloat(String data)
+        private segment segmentRead(object p)
         {
-            String[] dirtySplitSample = data.Split("\r\n");
-            String[] splitSample = dirtySplitSample.Take(dirtySplitSample.Length - 1).ToArray();
-
-            float[] ecgFloat = new float[splitSample.Length];
-            for (int i = 0; i < splitSample.Length; i++)
-            {
-                ecgFloat[i] = Convert.ToSingle(splitSample[i]);      
-            }
-
-            return ecgFloat;
-
-            
+            throw new NotImplementedException();
         }
 
         private async void _gattServer_OnChararteristicWrite(object myObject, CharacteristicEventArgs myArgs)
@@ -106,37 +96,7 @@ namespace Jenx.Bluetooth.GattServer.Desktop
             _gattServer.Start();
          
 
-
          
-        }
-
-
-        private async void AdvertiseGattServer_Click(object sender, RoutedEventArgs e)
-        {
-            flag = 0;
-            while (true)
-            {
-                var start = flag * sendLength;
-
-
-                _gattServer.runNotifyCharaterstic(floatToString(ecgfloat, start, sendLength).AsBuffer());
-                await Task.Delay(125);
-                flag += 1;
-            }
-
-
-
-        }
-
-
-
-        private byte[] floatToString(float[] data,int start,int length) {
-            ArraySegment<float> ecgSeg = new ArraySegment<float>(data, start, length);
-            string all = string.Join(",", ecgSeg.ToArray());
-
-            byte[] StrByte = Encoding.UTF8.GetBytes(all);
-
-            return StrByte;
         }
 
         private void StopGattServer_Click(object sender, RoutedEventArgs e)
@@ -144,10 +104,23 @@ namespace Jenx.Bluetooth.GattServer.Desktop
             _gattServer.Stop();
         }
 
-        private void AdvertiseButton_Click(object sender, RoutedEventArgs e)
-        {
 
+        private async void AdvertiseGattServer_Click(object sender, RoutedEventArgs e)
+        {
+            while (true)
+            {
+                _gattServer.runNotifyCharaterstic(n.popDataAsync().Result.AsBuffer());
+                await Task.Delay(125);
+            }
+            
         }
+
+
+       
+
+
+     
+
     }
 
 

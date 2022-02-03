@@ -11,42 +11,58 @@ namespace segmentRead
     public class segment
 
     {
+        private const int sendLength = 80;
+
         String folderPath;
-        Queue<StorageFile> files;
-        IReadOnlyList<StorageFile> d;
-        StorageFile dddd;
+        String fileName;
+        private String dataString;
+        private float[] dataFloat;
+
+        int flag = 0;
         
-        public segment(String folderPath)
+        public segment(String folderPath,String fileName)
         {
             this.folderPath = folderPath;
+            this.fileName = fileName;
+            flag = 0;
         }
 
-        public async Task getFileQueueAsync()
+
+        public Boolean getFileOpenState()
         {
-            var storageFolder = await StorageFolder.GetFolderFromPathAsync(folderPath);
-            var storageFiles = await storageFolder.GetFilesAsync();
-            this.d = storageFiles;
-            this.dddd = storageFiles.Last();
-            this.files = new Queue<StorageFile>(storageFiles);
-            
-          
+            if (dataString != null)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
 
-        public int segmentNumber()
+        public int getflagNumber()
         {
-            return files.Count;
+            return flag;
         }
 
-        public async Task<byte[]> popDataAsync()
+        public async Task setFile()
         {
-            var file = files.Dequeue();
-            var ecgString = await FileIO.ReadTextAsync(file);
-
-            float[] ecgFloatArray = parsingStringCsvToFloatArray(ecgString);
-            byte[] ecgByteArray = stringToByteArray(floatArrayToString(ecgFloatArray));
-
-            return ecgByteArray;
+            var folder = await StorageFolder.GetFolderFromPathAsync(folderPath);
+            var file = await folder.GetFileAsync(fileName);
+            dataString = await FileIO.ReadTextAsync(file);
+            dataFloat = parsingStringCsvToFloatArray(dataString);
         }
+
+        public byte[] popData()
+        {
+            byte[] data = stringToByteArray(floatArrayToString(dataFloat, flag * sendLength, sendLength));
+   
+            flag += 1;
+            return data;
+        }
+    
+
+       
 
 
         private float[] parsingStringCsvToFloatArray(String data)
@@ -64,10 +80,10 @@ namespace segmentRead
 
 
         }
-
-        private String floatArrayToString(float[] data)
+        private String floatArrayToString(float[] data, int start, int length)
         {
-            string all = string.Join(",", data);
+            ArraySegment<float> ecgSeg = new ArraySegment<float>(dataFloat, start, length);
+            string all = string.Join(",", ecgSeg.ToArray());
             return all;
         }
 

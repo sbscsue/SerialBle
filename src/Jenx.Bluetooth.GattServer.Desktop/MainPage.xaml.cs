@@ -29,9 +29,8 @@ namespace Jenx.Bluetooth.GattServer.Desktop
 
 
 
-        private string folderPath = @"C:\06_nsv_lead2_160_baselineRemove\annotation\N";
-        private string folderPath2 = @"C:\06_nsv_lead2_160_baselineRemove\annotation\S";
-        private string folderPath3 = @"C:\06_nsv_lead2_160_baselineRemove\annotation\V";
+        private string path = @"C:\sebin\lab\ecg2\data\segmentAll\01)NSV_320";
+      
         private string check = @"C:\sebin";
 
         public MainPage()
@@ -60,12 +59,13 @@ namespace Jenx.Bluetooth.GattServer.Desktop
         {
             //관련 객체 생성 n/s/v
             
-            n = new segment(check);
-            s = new segment(folderPath2);
-            v = new segment(folderPath3);
-            await n.getFileQueueAsync();
-            await s.getFileQueueAsync();
-            await v.getFileQueueAsync();
+            //n = new segment(path,"N.csv");
+            //await n.setFile();
+            s = new segment(path,"S.csv");
+            await s.setFile();
+            v = new segment(path,"V.csv");
+            await v.setFile();
+
 
         }
 
@@ -109,8 +109,8 @@ namespace Jenx.Bluetooth.GattServer.Desktop
         {
             while (true)
             {
-                _gattServer.runNotifyCharaterstic(n.popDataAsync().Result.AsBuffer());
-                await Task.Delay(125);
+                _gattServer.runNotifyCharaterstic(s.popData().AsBuffer());
+                await Task.Delay(100);
             }
             
         }
